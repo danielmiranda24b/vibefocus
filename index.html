@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VibeFocus — Claude Code Notifications</title>
+  <meta name="description" content="Get notified when Claude Code finishes or needs your input. Toast, beep, taskbar flash, and VS Code jumps to front." />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d0d0f;
+      --surface:   #16161a;
+      --border:    #2a2a30;
+      --accent:    #7c6af7;
+      --accent2:   #a78bfa;
+      --text:      #e8e8f0;
+      --muted:     #888898;
+      --win:       #0078d4;
+      --mac:       #555;
+      --radius:    14px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 20px 80px;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      max-width: 600px;
+      margin-bottom: 56px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #1e1830;
+      border: 1px solid #3d2f80;
+      color: var(--accent2);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 99px;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: clamp(42px, 8vw, 68px);
+      font-weight: 800;
+      letter-spacing: -2px;
+      line-height: 1.05;
+      background: linear-gradient(135deg, #fff 30%, var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 18px;
+    }
+
+    .tagline {
+      font-size: 18px;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 480px;
+      margin: 0 auto 10px;
+    }
+
+    .pills {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 13px;
+      padding: 4px 12px;
+      border-radius: 99px;
+    }
+
+    /* ── Install cards ── */
+    .cards {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 720px;
+      width: 100%;
+      margin-bottom: 60px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      flex: 1;
+      min-width: 280px;
+      max-width: 340px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .card-icon.win { background: #0a2a4a; }
+    .card-icon.mac { background: #2a2a2a; }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .cmd-box {
+      background: #0a0a0c;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+      font-size: 12px;
+      color: #a0e0a0;
+      word-break: break-all;
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    .install-btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+
+    .install-btn:active { transform: scale(.98); }
+    .install-btn:hover  { opacity: .88; }
+
+    .install-btn.win {
+      background: var(--win);
+      color: #fff;
+    }
+
+    .install-btn.mac {
+      background: #e8e8e8;
+      color: #111;
+    }
+
+    .copied-msg {
+      font-size: 12px;
+      color: #6ee76e;
+      text-align: center;
+      margin-top: 8px;
+      height: 16px;
+      transition: opacity .3s;
+    }
+
+    /* ── How it works ── */
+    .section {
+      max-width: 620px;
+      width: 100%;
+      margin-bottom: 56px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+    }
+
+    .step-num {
+      background: #1e1830;
+      color: var(--accent2);
+      font-size: 12px;
+      font-weight: 700;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .step-text strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 3px;
+    }
+
+    .step-text span {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ── Footer ── */
+    footer {
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    footer a {
+      color: var(--accent2);
+      text-decoration: none;
+    }
+
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="badge">⚡ Claude Code tool</div>
+    <h1>VibeFocus</h1>
+    <p class="tagline">
+      Get notified the moment Claude finishes or needs your input —
+      without staring at the screen.
+    </p>
+    <div class="pills">
+      <span class="pill">🔔 Toast notification</span>
+      <span class="pill">🔊 Beep</span>
+      <span class="pill">🟠 Taskbar flash</span>
+      <span class="pill">🪟 VS Code to front</span>
+    </div>
+  </header>
+
+  <div class="cards">
+
+    <!-- Windows -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon win">🪟</div>
+        <span class="card-title">Windows</span>
+      </div>
+      <div class="cmd-box" id="win-cmd">irm https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/viberaise/install.ps1 | iex</div>
+      <button class="install-btn win" onclick="copyCmd('win-cmd', 'win-copied')">
+        📋 Copy install command
+      </button>
+      <div class="copied-msg" id="win-copied"></div>
+    </div>
+
+    <!-- macOS -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon mac">🍎</div>
+        <span class="card-title">macOS</span>
+      </div>
+      <div class="cmd-box" id="mac-cmd">curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/viberaise/install.sh | bash</div>
+      <button class="install-btn mac" onclick="copyCmd('mac-cmd', 'mac-copied')">
+        📋 Copy install command
+      </button>
+      <div class="copied-msg" id="mac-copied"></div>
+    </div>
+
+  </div>
+
+  <!-- How it works -->
+  <div class="section">
+    <p class="section-title">What happens after install</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">
+          <strong>Claude finishes a response</strong>
+          <span>Toast + beep fires instantly. VS Code jumps to front if you switched away.</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">
+          <strong>Claude needs your permission</strong>
+          <span>Permission prompts trigger the same notification so you never miss them.</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">
+          <strong>Works across all your Claude sessions</strong>
+          <span>Named mutex prevents duplicates — safe to run 8+ sessions at once.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Built by <a href="https://github.com/YOUR_USERNAME">@YOUR_USERNAME</a> &nbsp;·&nbsp;
+    <a href="https://github.com/YOUR_USERNAME/YOUR_REPO">View on GitHub</a>
+  </footer>
+
+  <script>
+    function copyCmd(srcId, msgId) {
+      const text = document.getElementById(srcId).textContent.trim();
+      navigator.clipboard.writeText(text).then(() => {
+        const el = document.getElementById(msgId);
+        el.textContent = "✓ Copied!";
+        setTimeout(() => { el.textContent = ""; }, 2500);
+      });
+    }
+  </script>
+
+</body>
+</html>
