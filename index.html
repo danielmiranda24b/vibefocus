@@ -151,6 +151,12 @@
       line-height: 1.5;
     }
 
+    .card-note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
     .install-btn {
       width: 100%;
       padding: 12px;
@@ -164,6 +170,8 @@
       align-items: center;
       justify-content: center;
       gap: 7px;
+      text-decoration: none;
+      box-sizing: border-box;
     }
 
     .install-btn:active { transform: scale(.98); }
@@ -286,11 +294,10 @@
         <div class="card-icon win">🪟</div>
         <span class="card-title">Windows</span>
       </div>
-      <div class="cmd-box" id="win-cmd">irm https://raw.githubusercontent.com/danielmiranda24b/vibefocus/main/viberaise/install.ps1 | iex</div>
-      <button class="install-btn win" onclick="copyCmd('win-cmd', 'win-copied')">
-        📋 Copy install command
-      </button>
-      <div class="copied-msg" id="win-copied"></div>
+      <p class="card-note">Downloads a file — double-click it to install</p>
+      <a class="install-btn win" href="/VibeFocus-Install.bat" download="VibeFocus-Install.bat">
+        ⬇ Install on Windows
+      </a>
     </div>
 
     <!-- macOS -->
@@ -299,11 +306,10 @@
         <div class="card-icon mac">🍎</div>
         <span class="card-title">macOS</span>
       </div>
-      <div class="cmd-box" id="mac-cmd">curl -fsSL https://raw.githubusercontent.com/danielmiranda24b/vibefocus/main/viberaise/install.sh | bash</div>
-      <button class="install-btn mac" onclick="copyCmd('mac-cmd', 'mac-copied')">
-        📋 Copy install command
-      </button>
-      <div class="copied-msg" id="mac-copied"></div>
+      <p class="card-note">Downloads a file — double-click it to install</p>
+      <a class="install-btn mac" href="/VibeFocus-Install.command" download="VibeFocus-Install.command">
+        ⬇ Install on macOS
+      </a>
     </div>
 
   </div>

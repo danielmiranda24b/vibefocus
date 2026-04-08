@@ -1,0 +1,18 @@
+{
+  "headers": [
+    {
+      "source": "/VibeFocus-Install.bat",
+      "headers": [
+        { "key": "Content-Disposition", "value": "attachment; filename=\"VibeFocus-Install.bat\"" },
+        { "key": "Content-Type", "value": "application/octet-stream" }
+      ]
+    },
+    {
+      "source": "/VibeFocus-Install.command",
+      "headers": [
+        { "key": "Content-Disposition", "value": "attachment; filename=\"VibeFocus-Install.command\"" },
+        { "key": "Content-Type", "value": "application/octet-stream" }
+      ]
+    }
+  ]
+}
