@@ -7,14 +7,14 @@
 
 .USAGE
     From the web (one-liner):
-        irm https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/viberaise/install.ps1 | iex
+        irm https://raw.githubusercontent.com/danielmiranda24b/vibefocus/main/viberaise/install.ps1 | iex
 
     From a cloned repo:
         .\viberaise\install.ps1
 #>
 
 # ── Config ────────────────────────────────────────────────────────────────────
-$REPO_RAW = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/viberaise"
+$REPO_RAW = "https://raw.githubusercontent.com/danielmiranda24b/vibefocus/main/viberaise"
 
 $vibeDir  = "$env:USERPROFILE\.vibeRaise"
 $hooksDir = "$env:USERPROFILE\.vibepause\hooks"

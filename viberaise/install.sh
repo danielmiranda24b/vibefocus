@@ -4,12 +4,12 @@
 # Brings VS Code to front if another app is covering it.
 #
 # Usage (one-liner from the web):
-#   curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/viberaise/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/danielmiranda24b/vibefocus/main/viberaise/install.sh | bash
 #
 # Or from a cloned repo:
 #   bash viberaise/install.sh
 
-REPO_RAW="https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/viberaise"
+REPO_RAW="https://raw.githubusercontent.com/danielmiranda24b/vibefocus/main/viberaise"
 VIBE_DIR="$HOME/.vibeRaise"
 HOOKS_DIR="$HOME/.vibepause/hooks"
 CFG_FILE="$HOME/.claude/settings.json"

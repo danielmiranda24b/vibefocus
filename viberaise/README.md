@@ -10,12 +10,12 @@ Works with multiple simultaneous Claude sessions.
 
 ### Windows
 ```powershell
-irm https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/viberaise/install.ps1 | iex
+irm https://raw.githubusercontent.com/danielmiranda24b/vibefocus/main/viberaise/install.ps1 | iex
 ```
 
 ### macOS
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/viberaise/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/danielmiranda24b/vibefocus/main/viberaise/install.sh | bash
 ```
 
 The installer:
