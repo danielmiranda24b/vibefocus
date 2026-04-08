@@ -2,8 +2,8 @@
 <#
 .SYNOPSIS
     VibeFocus — one-click installer for Windows.
-    Notifies you (toast + beep + taskbar flash) when Claude finishes or needs permission.
-    Brings VS Code to front if another app is covering it.
+    Automatically installs Node.js and Claude Code if missing, then sets up
+    toast + beep + taskbar flash notifications for Claude Code sessions.
 
 .USAGE
     From the web (one-liner):
@@ -25,12 +25,45 @@ Write-Host "  VibeFocus installer for Windows" -ForegroundColor Cyan
 Write-Host "  ─────────────────────────────────" -ForegroundColor DarkGray
 Write-Host ""
 
-# ── Create directories ────────────────────────────────────────────────────────
+# ── Step 1: Node.js ───────────────────────────────────────────────────────────
+if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+    Write-Host "  [install]   Node.js not found — installing via winget..." -ForegroundColor Yellow
+    winget install OpenJS.NodeJS.LTS --silent --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
+    # Refresh PATH so npm is available in this session
+    $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" +
+                [System.Environment]::GetEnvironmentVariable("PATH","User")
+    if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+        Write-Host ""
+        Write-Host "  Node.js installed. Please restart your terminal and re-run this installer." -ForegroundColor Yellow
+        Write-Host ""
+        exit 0
+    }
+    Write-Host "  [ok]        Node.js $(node --version)" -ForegroundColor DarkGray
+} else {
+    Write-Host "  [ok]        Node.js $(node --version)" -ForegroundColor DarkGray
+}
+
+# ── Step 2: Claude Code ───────────────────────────────────────────────────────
+if (-not (Get-Command claude -ErrorAction SilentlyContinue)) {
+    Write-Host "  [install]   Claude Code not found — installing..." -ForegroundColor Yellow
+    npm install -g @anthropic-ai/claude-code 2>&1 | Out-Null
+    $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" +
+                [System.Environment]::GetEnvironmentVariable("PATH","User")
+    if (-not (Get-Command claude -ErrorAction SilentlyContinue)) {
+        Write-Host "  [error]     Claude Code install failed. Try: npm install -g @anthropic-ai/claude-code" -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "  [ok]        Claude Code installed" -ForegroundColor DarkGray
+} else {
+    Write-Host "  [ok]        Claude Code $(claude --version 2>$null)" -ForegroundColor DarkGray
+}
+
+# ── Step 3: Create directories ────────────────────────────────────────────────
 New-Item -ItemType Directory -Force -Path $vibeDir  | Out-Null
 New-Item -ItemType Directory -Force -Path $hooksDir | Out-Null
 New-Item -ItemType Directory -Force -Path (Split-Path $cfgFile) | Out-Null
 
-# ── Copy or download core scripts ─────────────────────────────────────────────
+# ── Step 4: Copy or download core scripts ─────────────────────────────────────
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 function Install-Script($name, $dest) {
@@ -47,7 +80,7 @@ function Install-Script($name, $dest) {
 Install-Script "focus-window.ps1" "$vibeDir\focus-window.ps1"
 Install-Script "run-hidden.vbs"   "$vibeDir\run-hidden.vbs"
 
-# ── Write hook CMD files (paths resolved to this machine) ─────────────────────
+# ── Step 5: Write hook CMD files (paths resolved to this machine) ──────────────
 @"
 @echo off
 wscript //nologo "$vibeDir\run-hidden.vbs" "$vibeDir\focus-window.ps1"
@@ -65,7 +98,7 @@ wscript //nologo "$vibeDir\run-hidden.vbs" "$vibeDir\focus-window.ps1" "Claude n
 
 Write-Host "  [created]   hook scripts" -ForegroundColor DarkGray
 
-# ── Merge into Claude settings.json ──────────────────────────────────────────
+# ── Step 6: Merge into Claude settings.json ───────────────────────────────────
 $cfg = if (Test-Path $cfgFile) {
     Get-Content $cfgFile -Raw | ConvertFrom-Json
 } else {
@@ -99,7 +132,7 @@ Write-Host "  [merged]    ~/.claude/settings.json" -ForegroundColor DarkGray
 
 # ── Test ──────────────────────────────────────────────────────────────────────
 Write-Host ""
-Write-Host "  Done! Testing in 3 seconds — switch to another window now..." -ForegroundColor Green
+Write-Host "  All done! Testing in 3 seconds — switch to another window now..." -ForegroundColor Green
 Write-Host ""
 Start-Sleep 3
 powershell.exe -ExecutionPolicy Bypass -File "$vibeDir\focus-window.ps1" "VibeFocus installed!" "Claude will now notify you when done"
