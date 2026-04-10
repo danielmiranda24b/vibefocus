@@ -29,6 +29,10 @@ Add-Type -Name Win -Namespace VR -MemberDefinition @"
     public static extern IntPtr GetForegroundWindow();
     [System.Runtime.InteropServices.DllImport("user32.dll")]
     public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint pid);
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, int dwExtraInfo);
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    public static extern void SwitchToThisWindow(IntPtr hWnd, bool fAltTab);
 
     public static void Flash(IntPtr h) {
         FWI f = new FWI();
@@ -88,6 +92,10 @@ if ($vscWins.Count -gt 0) {
     $vscInFront = ($fgName -eq "Code")
 
     if (-not $vscInFront) {
+        # keybd_event(0,0,0,0) tricks Windows into granting foreground rights to this
+        # background process — without it, SetForegroundWindow is silently blocked
+        [VR.Win]::keybd_event(0, 0, 0, 0)
+        [VR.Win]::SwitchToThisWindow($vscWins[0].MainWindowHandle, $true)
         [VR.Win]::SetForegroundWindow($vscWins[0].MainWindowHandle) | Out-Null
     }
 
