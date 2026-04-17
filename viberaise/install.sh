@@ -80,12 +80,7 @@ cat > "$HOOKS_DIR/on_notification.sh" << EOF
 "$VIBE_DIR/notify.sh" "Claude needs you" "Permission or input required"
 EOF
 
-cat > "$HOOKS_DIR/on_pre_tool_use.sh" << EOF
-#!/bin/bash
-"$VIBE_DIR/notify.sh" "Claude needs permission" "Allow or deny the bash command"
-EOF
-
-chmod +x "$HOOKS_DIR/on_stop.sh" "$HOOKS_DIR/on_notification.sh" "$HOOKS_DIR/on_pre_tool_use.sh"
+chmod +x "$HOOKS_DIR/on_stop.sh" "$HOOKS_DIR/on_notification.sh"
 echo "  [created]   hook scripts"
 
 # ── Step 6: Merge into Claude settings.json ───────────────────────────────────
@@ -115,7 +110,6 @@ def add_hook(event, matcher, cmd):
 
 add_hook("Stop",         "",     hooks_dir + "/on_stop.sh")
 add_hook("Notification", "",     hooks_dir + "/on_notification.sh")
-add_hook("PreToolUse",   "Bash", hooks_dir + "/on_pre_tool_use.sh")
 
 with open(cfg_file, "w") as f:
     json.dump(settings, f, indent=4)

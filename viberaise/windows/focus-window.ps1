@@ -14,6 +14,7 @@ if (-not $got) { $mtx.Dispose(); exit 0 }
 try {
 
 # ── Taskbar-only flash (FLASHW_TRAY=2, no WM_NCACTIVATE to Electron) ─────────
+if (-not ([System.Management.Automation.PSTypeName]'VR.Win').Type) {
 Add-Type -Name Win -Namespace VR -MemberDefinition @"
     [System.Runtime.InteropServices.StructLayout(
         System.Runtime.InteropServices.LayoutKind.Sequential)]
@@ -44,13 +45,21 @@ Add-Type -Name Win -Namespace VR -MemberDefinition @"
         FlashWindowEx(ref f);
     }
 "@ -ErrorAction SilentlyContinue
+} # end Add-Type guard
 
-# ── Toast (powershell.exe 5.1 WinRT, AUMID is registered) ────────────────────
+# ── Toast (powershell.exe 5.1 WinRT) ─────────────────────────────────────────
+# Register AUMID in HKCU — required on Windows 11 22H2+ where it is no longer
+# pre-registered; without this entry Show() silently drops the notification.
+$aumid   = "{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe"
+$regPath = "HKCU:\SOFTWARE\Classes\AppUserModelId\$aumid"
+if (-not (Test-Path $regPath)) {
+    New-Item -Path $regPath -Force | Out-Null
+    New-ItemProperty -Path $regPath -Name "DisplayName" -Value "Windows PowerShell" -PropertyType String -Force | Out-Null
+}
 $sent = $false
 try {
     [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
     [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null
-    $aumid = "{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe"
     $n     = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($aumid)
     if ($n.Setting -eq 'Enabled') {
         $x = New-Object Windows.Data.Xml.Dom.XmlDocument
@@ -78,7 +87,12 @@ if (-not $sent) {
 }
 
 # ── Beep ─────────────────────────────────────────────────────────────────────
-try { [System.Media.SystemSounds]::Beep.Play() } catch { }
+try {
+    [System.Media.SystemSounds]::Beep.Play()
+} catch {
+    try { [console]::beep(800, 400) } catch { }
+}
+try { [console]::beep(800, 400) } catch { }
 
 # ── Smart focus + flash ───────────────────────────────────────────────────────
 # Only target Code windows with a real title (skips extension host / GPU procs)

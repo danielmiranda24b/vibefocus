@@ -38,13 +38,12 @@ The installer automatically installs Node.js and Claude Code if you don't have t
 |---|---|
 | **Claude finishes** | End of every response |
 | **Notification** | Claude has a message for you |
-| **Permission prompt** | Claude needs to run a command |
 
 ---
 
 ## How it works
 
-The installer registers three hooks in `~/.claude/settings.json`. When Claude fires a hook:
+The installer registers two hooks in `~/.claude/settings.json`. When Claude fires a hook:
 
 ```
 on_stop.cmd → run-hidden.vbs → focus-window.ps1
@@ -56,7 +55,7 @@ on_stop.cmd → run-hidden.vbs → focus-window.ps1
 - Flashes the VS Code taskbar button orange until you click it
 - Brings VS Code to front if another app is covering it
 
-Uses a named mutex so multiple Claude sessions don't conflict.
+Uses a mutex to serialize notifications — one at a time, no overlapping alerts across concurrent sessions. Windows uses a named system mutex; macOS uses `flock`.
 
 ---
 
@@ -67,16 +66,15 @@ Uses a named mutex so multiple Claude sessions don't conflict.
 Remove-Item -Recurse "$env:USERPROFILE\.vibeRaise"
 Remove-Item "$env:USERPROFILE\.vibepause\hooks\on_stop.cmd"
 Remove-Item "$env:USERPROFILE\.vibepause\hooks\on_notification.cmd"
-Remove-Item "$env:USERPROFILE\.vibepause\hooks\on_pre_tool_use.cmd"
 ```
-Then remove the `hooks` block from `~/.claude/settings.json`.
+Then remove the VibeFocus entries from the `hooks` section of `~/.claude/settings.json` (remove the `Stop` and `Notification` entries added by VibeFocus, leaving any other tools' hooks intact).
 
 ### macOS
 ```bash
 rm -rf ~/.vibeRaise
-rm ~/.vibepause/hooks/on_stop.sh ~/.vibepause/hooks/on_notification.sh ~/.vibepause/hooks/on_pre_tool_use.sh
+rm ~/.vibepause/hooks/on_stop.sh ~/.vibepause/hooks/on_notification.sh
 ```
-Then remove the `hooks` block from `~/.claude/settings.json`.
+Then remove the VibeFocus entries from the `hooks` section of `~/.claude/settings.json` (remove the `Stop` and `Notification` entries added by VibeFocus, leaving any other tools' hooks intact).
 
 ---
 

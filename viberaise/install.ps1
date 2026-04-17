@@ -91,11 +91,6 @@ wscript //nologo "$vibeDir\run-hidden.vbs" "$vibeDir\focus-window.ps1"
 wscript //nologo "$vibeDir\run-hidden.vbs" "$vibeDir\focus-window.ps1" "Claude needs you" "Permission or input required"
 "@ | Set-Content "$hooksDir\on_notification.cmd" -Encoding ASCII
 
-@"
-@echo off
-wscript //nologo "$vibeDir\run-hidden.vbs" "$vibeDir\focus-window.ps1" "Claude needs permission" "Allow or deny the bash command"
-"@ | Set-Content "$hooksDir\on_pre_tool_use.cmd" -Encoding ASCII
-
 Write-Host "  [created]   hook scripts" -ForegroundColor DarkGray
 
 # ── Step 6: Merge into Claude settings.json ───────────────────────────────────
@@ -125,7 +120,6 @@ function Add-Hook($event, $matcher, $cmd) {
 
 Add-Hook "Stop"         ""     "`"$hooksDir\on_stop.cmd`""
 Add-Hook "Notification" ""     "`"$hooksDir\on_notification.cmd`""
-Add-Hook "PreToolUse"   "Bash" "`"$hooksDir\on_pre_tool_use.cmd`""
 
 $cfg | ConvertTo-Json -Depth 10 | Set-Content $cfgFile -Encoding UTF8
 Write-Host "  [merged]    ~/.claude/settings.json" -ForegroundColor DarkGray
